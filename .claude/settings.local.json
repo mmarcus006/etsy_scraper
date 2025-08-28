@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Search(C:\\Users\\Miller\\Downloads/**)",
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "Bash(gitingest:*)",
+      "WebFetch(domain:curl-cffi.readthedocs.io)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
