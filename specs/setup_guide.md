@@ -57,7 +57,7 @@ uv sync
 **Verify Installation**:
 ```bash
 # Check that dependencies are installed
-uv run python -c "import curl_cffi; print('Dependencies installed successfully')"
+uv run python -c "import curl_cffi, streamlit, tqdm; print('Dependencies installed successfully')"
 ```
 
 ## Configuration
@@ -94,11 +94,47 @@ The scraper will automatically create required directories:
 
 ## Quick Start
 
-### 1. Basic Scraping
+### 1. Choose Your Interface
+
+**Option A: Web GUI (Recommended)**:
+```bash
+# Launch the modern web interface
+uv run streamlit run gui.py
+
+# Or double-click run_gui.bat on Windows
+```
+
+**Option B: Command Line**:
+```bash
+# Scrape with CLI (10 pages default)
+uv run python src/etsy_scraper/cli.py products
+```
+
+### 2. GUI Interface Setup
+
+The Streamlit GUI provides a comprehensive web interface:
+
+**Windows Quick Launch**:
+1. Double-click `run_gui.bat`
+2. Your browser will open to `http://localhost:8501`
+
+**Mac/Linux Launch**:
+```bash
+uv run streamlit run gui.py
+```
+
+**GUI Features**:
+- **Dashboard**: Overview of scraping progress and statistics
+- **Configuration**: Visual settings management with save/load profiles
+- **Run Scraper**: Execute operations with real-time progress monitoring
+- **Data Viewer**: Browse, search, and export CSV data with visualizations
+- **Logs**: Live log streaming with filtering capabilities
+
+### 3. Basic CLI Scraping
 
 **Scrape first 5 pages**:
 ```bash
-uv run python src/etsy_scraper/scrapers/scraper_main.py --max-pages 5
+uv run python src/etsy_scraper/cli.py products --max-pages 5
 ```
 
 **Expected Output**:
@@ -117,7 +153,7 @@ Saves to CSV with deduplication
 ...
 ```
 
-### 2. Check Results
+### 4. Check Results
 
 **View CSV Output**:
 ```bash
@@ -131,7 +167,7 @@ head -5 data/etsy_products.csv
 Get-Content data/etsy_products.csv | Select-Object -First 5
 ```
 
-### 3. Complete Pipeline
+### 5. Complete Pipeline
 
 **Run all operations (products → shops → metrics)**:
 ```bash
@@ -148,7 +184,7 @@ uv run python src/etsy_scraper/cli.py shops
 uv run python src/etsy_scraper/cli.py metrics
 ```
 
-### 4. Resume Scraping
+### 6. Resume Scraping
 
 The scraper automatically resumes from the last scraped page:
 
@@ -160,6 +196,18 @@ uv run python src/etsy_scraper/cli.py products
 ## Advanced Usage
 
 ### CLI Command Reference
+
+### GUI vs CLI Comparison
+
+| Feature | GUI Interface | CLI Interface |
+|---------|--------------|---------------|
+| **Ease of Use** | Point-and-click, visual | Command-line knowledge required |
+| **Progress Tracking** | Real-time visual progress | Text-based progress bars |
+| **Data Viewing** | Interactive tables and charts | External CSV viewer needed |
+| **Configuration** | Visual forms with validation | Command-line arguments |
+| **Log Monitoring** | Live streaming with filters | File-based log viewing |
+| **Automation** | Manual operation | Scriptable and automatable |
+| **System Resources** | Higher (web browser + server) | Lower (command-line only) |
 
 **Complete Command Structure**:
 ```bash
@@ -272,7 +320,28 @@ uv sync
 uv run python -c "import sys; print(sys.path)"
 ```
 
-**2. Permission Denied (Data Directory)**:
+**2. GUI Won't Start**:
+```bash
+# Check if Streamlit is installed
+uv run python -c "import streamlit; print('Streamlit available')"
+
+# Try alternative launch method
+uv run python run_gui.py
+
+# Check if port 8501 is available
+netstat -an | grep 8501
+```
+
+**3. Progress Bars Not Showing (CLI)**:
+```bash
+# Ensure tqdm is installed
+uv run python -c "import tqdm; print('Progress bars available')"
+
+# Use verbose mode for more feedback
+uv run python src/etsy_scraper/cli.py products --verbose
+```
+
+**4. Permission Denied (Data Directory)**:
 ```bash
 # Check directory permissions
 ls -la data/
@@ -282,7 +351,7 @@ mkdir -p data logs
 chmod 755 data logs
 ```
 
-**3. SSL Certificate Errors**:
+**5. SSL Certificate Errors**:
 ```bash
 # Update certificates (macOS)
 /Applications/Python\ 3.11/Install\ Certificates.command
@@ -292,7 +361,7 @@ chmod 755 data logs
 # Set CURL_CFFI_CONFIG["verify"] = False
 ```
 
-**4. DataDome Protection Detected**:
+**6. DataDome Protection Detected**:
 This is normal behavior. The scraper:
 - Detects protection attempts
 - Logs them for analysis

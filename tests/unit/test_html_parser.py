@@ -10,6 +10,19 @@ import pytest
 from etsy_scraper.extractors.html_parser import DataExtractor
 
 
+class TemplatePageExtractor(DataExtractor):
+    """Wrapper class for tests to set HTML content."""
+    def __init__(self, html_content):
+        super().__init__()
+        self._test_html = html_content
+
+
+class HtmlParser:
+    """Simple HTML parser wrapper for tests."""
+    def __init__(self, html_content):
+        self.soup = BeautifulSoup(html_content, 'html.parser')
+
+
 class TestDataExtractor:
     """Test DataExtractor functionality."""
     

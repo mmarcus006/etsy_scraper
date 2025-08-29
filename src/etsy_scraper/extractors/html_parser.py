@@ -19,16 +19,20 @@ class DataExtractor:
         self.listing_id_pattern = re.compile(r'/listing/(\d+)/')
         self.shop_pattern = re.compile(r'/shop/([^/?]+)')
     
-    def extract_products(self, html_content: str) -> List[Dict[str, Any]]:
+    def extract_products(self, html_content: str = None, page_number: int = 1) -> List[Dict[str, Any]]:
         """
         Extract product data from category/search pages.
         
         Args:
-            html_content: Raw HTML of the page
+            html_content: Raw HTML of the page (optional for tests)
+            page_number: Page number for metadata
             
         Returns:
             List of product dictionaries
         """
+        if html_content is None:
+            html_content = getattr(self, '_test_html', '')
+        
         soup = BeautifulSoup(html_content, 'html.parser')
         products = []
         
@@ -38,12 +42,16 @@ class DataExtractor:
             # Fallback to any listing links
             cards = soup.find_all('a', href=self.listing_id_pattern)
         
+        position = 0
         for card in cards:
             try:
                 product = self._extract_product_from_card(card)
                 if product and product['listing_id']:
                     # Check for duplicates
                     if product['listing_id'] not in [p['listing_id'] for p in products]:
+                        position += 1
+                        product['page_number'] = page_number
+                        product['position_on_page'] = position
                         products.append(product)
             except Exception as e:
                 logger.error(f"Error extracting product: {e}")

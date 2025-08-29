@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Project paths
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # 4 levels up to project root
 DATA_DIR = BASE_DIR / "data"
 LOGS_DIR = BASE_DIR / "logs"
 CACHE_DIR = DATA_DIR / "cache"
@@ -111,4 +111,4 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # Environment-based settings
 PROXY_URL = os.getenv("PROXY_URL")
-MAX_PAGES = int(os.getenv("MAX_PAGES_TO_SCRAPE", "1000"))  # Default to 10 pages for safety
+MAX_PAGES = int(os.getenv("MAX_PAGES_TO_SCRAPE", "10"))  # Default to 10 pages for safety

@@ -10,25 +10,54 @@ The original implementation used a single scraper (`etsy_flow_curl_cffi.py`) tha
 2. Specific product listing page
 3. Shop page
 
-### Current Architecture (Dynamic Pagination)
+### Current Architecture (Dynamic Pagination + GUI)
 The new implementation features a modular design with specialized components for:
+- **Streamlit Web GUI**: Modern interface with real-time monitoring and data visualization
+- **Progress Tracking**: Visual progress bars with tqdm for better user experience
+- **Type Safety**: Comprehensive type hints for improved development
 - Dynamic pagination through all category pages
 - Comprehensive 19-field data extraction
 - CSV storage with deduplication
 - Session management with retry logic
-- CLI interface with flexible options
+- Unified CLI interface with flexible options
 
 ## Core Modules
 
-### 1. CLI Interface (`scrapers/scraper_main.py`)
+### 1. GUI Interface (`gui.py`)
 
-**Purpose**: Main execution script and command-line interface
+**Purpose**: Modern Streamlit web interface for comprehensive scraper management
 
 **Key Features**:
-- Comprehensive argument parsing with multiple options
+- **5 Comprehensive Tabs**: Dashboard, Configuration, Run Scraper, Data Viewer, Logs
+- **Real-time Progress**: Visual progress tracking with charts and indicators
+- **Configuration Profiles**: Save and load different scraping configurations
+- **Data Visualization**: Interactive charts with Plotly for data analysis
+- **Live Log Streaming**: Real-time log monitoring with filtering capabilities
+- **CSV Data Browser**: Search, filter, and export data with advanced features
+
+**Launch Methods**:
+```bash
+# Direct Streamlit command
+uv run streamlit run gui.py
+
+# Python launcher (cross-platform)
+uv run python run_gui.py
+
+# Windows batch file (double-click)
+run_gui.bat
+```
+
+### 2. CLI Interface (`cli.py`)
+
+**Purpose**: Unified command-line interface with comprehensive type safety
+
+**Key Features**:
+- Unified subcommand structure (products, shops, metrics, all)
+- Comprehensive type hints for better IDE support
+- Visual progress bars using tqdm
 - Configuration validation and dry-run mode
-- Progress reporting and summary statistics
-- Error handling and graceful shutdown
+- Enhanced error handling with informative messages
+- Safe default values (10 pages, 100 items)
 
 **CLI Commands & Options**:
 ```bash
