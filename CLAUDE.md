@@ -90,6 +90,17 @@ uv run python src/etsy_scraper/cli.py products --verbose --max-pages 3
 uv run python src/etsy_scraper/cli.py products --dry-run
 ```
 
+### Running the GUI
+```bash
+# Launch web interface
+uv run streamlit run gui.py
+
+# Alternative Python launcher
+uv run python run_gui.py
+
+# Windows users can double-click run_gui.bat
+```
+
 ## Architecture
 
 ### Core Architecture Implementation
@@ -103,17 +114,19 @@ This architecture is designed to appear natural to anti-bot systems by maintaini
 
 ### Key Components
 
-- **`scrapers/scraper_main.py`**: CLI interface and main execution script with comprehensive command-line options for flexible scraping control.
+- **`cli.py`**: Unified CLI interface with comprehensive command-line options for flexible scraping control.
 
-- **`scrapers/etsy_template_scraper.py`**: Core scraper implementation using curl-cffi library for browser impersonation. Handles dynamic pagination with DataDome bypass strategies.
+- **`gui.py`**: Modern Streamlit web interface with 5 tabs for dashboard, configuration, scraping, data viewing, and logs.
 
-- **`scrapers/pagination.py`**: Handles dynamic page detection and navigation through category pages.
+- **`core/scraper.py`**: Core scraper implementation with comprehensive type hints, using curl-cffi library for browser impersonation and tqdm for progress tracking.
 
-- **`extractors/product_links.py`**: Enhanced product data extraction with 19-field comprehensive data collection including advertisement detection.
+- **`data/manager.py`**: Enhanced data management with CSV operations, deduplication, progress tracking, and resume capability.
 
-- **`data/csv_manager.py`**: CSV storage system with deduplication, progress tracking, and resume capability.
+- **`extractors/html_parser.py`**: HTML parsing and data extraction with 19-field comprehensive product data collection including advertisement detection.
 
-- **`scrapers/session_manager.py`**: Session rotation and retry logic for robust request handling.
+- **`utils/pagination.py`**: Handles dynamic page detection and navigation through category pages.
+
+- **`utils/session.py`**: Session rotation and retry logic for robust request handling.
 
 - **`config/etsy_flow_config.py`**: Central configuration containing:
   - Base URLs and pagination parameters
@@ -135,6 +148,19 @@ The project uses curl-cffi with Chrome impersonation to bypass DataDome and othe
 - Session rotation and retry mechanisms
 - DataDome detection and logging
 - Referrer chain maintenance throughout pagination
+
+### Type Safety
+The codebase now includes comprehensive type hints for better IDE support and error prevention:
+- All major functions have proper type annotations
+- Enhanced development experience with better autocomplete
+- Reduced runtime errors through static type checking
+- Run `uv run mypy src/` to verify type consistency
+
+### Progress Tracking
+Visual feedback is provided throughout all operations:
+- **tqdm Progress Bars**: Real-time progress with ETA and speed indicators
+- **GUI Progress**: Visual progress tracking in the web interface
+- **Operation Status**: Clear feedback for page navigation, data extraction, and file operations
 
 ### Data Extraction
 The scraper extracts comprehensive product data with **19 fields per product**:
@@ -175,6 +201,8 @@ The test suite consists of:
   - core/config.py: 100% coverage achieved
   - Comprehensive test cases: 100+ tests across modules
   - No mocks policy ensures real-world validation
+- Progress bars included in test validation
+- Type hints improve test reliability and IDE support
 
 ## Important Notes
 
