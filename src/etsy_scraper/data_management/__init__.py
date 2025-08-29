@@ -1,1 +1,0 @@
-"""Data management modules for Etsy scraper."""

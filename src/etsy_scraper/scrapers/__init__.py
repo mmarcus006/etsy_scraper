@@ -1,1 +1,0 @@
-"""Scraper modules for different Etsy data types."""
