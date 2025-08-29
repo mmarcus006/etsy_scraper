@@ -87,8 +87,7 @@ def cmd_products(args, scraper):
     print_summary(results, "Product Scraping")
     
     # Show CSV location
-    csv_path = args.csv_path or DATA_DIR / "etsy_products.csv"
-    print(f"\nCSV file: {csv_path}")
+    print(f"\nCSV file: {args.csv_path}")
     
     return 0 if results.get("success") else 1
 
@@ -106,8 +105,7 @@ def cmd_shops(args, scraper):
     print_summary(results, "Shop Extraction")
     
     # Show CSV location
-    csv_path = args.output_csv or DATA_DIR / "shops_from_listings.csv"
-    print(f"\nCSV file: {csv_path}")
+    print(f"\nCSV file: {args.output_csv}")
     
     return 0 if results.get("success") else 1
 
@@ -117,10 +115,9 @@ def cmd_metrics(args, scraper):
     logger.info("Starting shop metrics extraction...")
     
     # Check if shops CSV exists
-    shops_csv = args.shops_csv or DATA_DIR / "shops_from_listings.csv"
-    if not Path(shops_csv).exists():
-        logger.error(f"Shops CSV not found: {shops_csv}")
-        print(f"\nError: Shops CSV not found: {shops_csv}")
+    if not Path(args.shops_csv).exists():
+        logger.error(f"Shops CSV not found: {args.shops_csv}")
+        print(f"\nError: Shops CSV not found: {args.shops_csv}")
         print("Please run 'shops' command first to extract shops from listings.")
         return 1
     
@@ -133,8 +130,7 @@ def cmd_metrics(args, scraper):
     print_summary(results, "Metrics Extraction")
     
     # Show CSV location
-    csv_path = args.output_csv or DATA_DIR / "shop_metrics.csv"
-    print(f"\nCSV file: {csv_path}")
+    print(f"\nCSV file: {args.output_csv}")
     
     return 0 if results.get("success") else 1
 
@@ -218,28 +214,92 @@ def main():
     
     # Products command
     products_parser = subparsers.add_parser("products", help="Scrape product listings")
-    products_parser.add_argument("--max-pages", type=int, help="Maximum pages to scrape")
-    products_parser.add_argument("--start-page", type=int, default=1, help="Starting page")
-    products_parser.add_argument("--csv-path", help="Custom CSV output path")
-    products_parser.add_argument("--clear-data", action="store_true", help="Clear existing data")
+    products_parser.add_argument(
+        "--max-pages",
+        type=int,
+        default=10,
+        help="Maximum pages to scrape (default: 10, use 0 for all pages)"
+    )
+    products_parser.add_argument(
+        "--start-page",
+        type=int,
+        default=1,
+        help="Starting page number (default: 1)"
+    )
+    products_parser.add_argument(
+        "--csv-path",
+        type=Path,
+        default=DATA_DIR / "etsy_products.csv",
+        help=f"CSV output path (default: {DATA_DIR}/etsy_products.csv)"
+    )
+    products_parser.add_argument(
+        "--clear-data",
+        action="store_true",
+        help="Clear existing data before starting"
+    )
     
     # Shops command
     shops_parser = subparsers.add_parser("shops", help="Extract shops from listings")
-    shops_parser.add_argument("--products-csv", help="Path to products CSV")
-    shops_parser.add_argument("--output-csv", help="Output CSV path")
-    shops_parser.add_argument("--max-items", type=int, help="Maximum items to process")
+    shops_parser.add_argument(
+        "--products-csv",
+        type=Path,
+        default=DATA_DIR / "etsy_products.csv",
+        help=f"Path to products CSV (default: {DATA_DIR}/etsy_products.csv)"
+    )
+    shops_parser.add_argument(
+        "--output-csv",
+        type=Path,
+        default=DATA_DIR / "shops_from_listings.csv",
+        help=f"Output CSV path (default: {DATA_DIR}/shops_from_listings.csv)"
+    )
+    shops_parser.add_argument(
+        "--max-items",
+        type=int,
+        default=100,
+        help="Maximum items to process (default: 100, use 0 for all items)"
+    )
     
     # Metrics command
     metrics_parser = subparsers.add_parser("metrics", help="Extract shop metrics")
-    metrics_parser.add_argument("--shops-csv", help="Path to shops CSV")
-    metrics_parser.add_argument("--output-csv", help="Output CSV path")
-    metrics_parser.add_argument("--max-items", type=int, help="Maximum shops to process")
+    metrics_parser.add_argument(
+        "--shops-csv",
+        type=Path,
+        default=DATA_DIR / "shops_from_listings.csv",
+        help=f"Path to shops CSV (default: {DATA_DIR}/shops_from_listings.csv)"
+    )
+    metrics_parser.add_argument(
+        "--output-csv",
+        type=Path,
+        default=DATA_DIR / "shop_metrics.csv",
+        help=f"Output CSV path (default: {DATA_DIR}/shop_metrics.csv)"
+    )
+    metrics_parser.add_argument(
+        "--max-items",
+        type=int,
+        default=100,
+        help="Maximum shops to process (default: 100, use 0 for all shops)"
+    )
     
     # All command (complete pipeline)
     all_parser = subparsers.add_parser("all", help="Run complete pipeline")
-    all_parser.add_argument("--max-pages", type=int, help="Maximum pages for products")
-    all_parser.add_argument("--start-page", type=int, default=1, help="Starting page")
-    all_parser.add_argument("--max-items", type=int, help="Maximum items for shops/metrics")
+    all_parser.add_argument(
+        "--max-pages",
+        type=int,
+        default=10,
+        help="Maximum pages for products (default: 10, use 0 for all pages)"
+    )
+    all_parser.add_argument(
+        "--start-page",
+        type=int,
+        default=1,
+        help="Starting page number (default: 1)"
+    )
+    all_parser.add_argument(
+        "--max-items",
+        type=int,
+        default=100,
+        help="Maximum items for shops/metrics (default: 100, use 0 for all items)"
+    )
     
     args = parser.parse_args()
     
@@ -261,10 +321,12 @@ def main():
         print(f"Proxy: {'Configured' if args.proxy else 'None'}")
         
         if args.command == "products":
-            print(f"Max pages: {getattr(args, 'max_pages', None) or 'All'}")
+            max_pages = getattr(args, 'max_pages', 10)
+            print(f"Max pages: {max_pages if max_pages > 0 else 'All'}")
             print(f"Start page: {getattr(args, 'start_page', 1)}")
         elif args.command in ["shops", "metrics"]:
-            print(f"Max items: {getattr(args, 'max_items', None) or 'All'}")
+            max_items = getattr(args, 'max_items', 100)
+            print(f"Max items: {max_items if max_items > 0 else 'All'}")
         
         print("\nConfiguration valid. Exiting dry run.")
         return 0

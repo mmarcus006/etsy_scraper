@@ -30,15 +30,28 @@ The new implementation features a modular design with specialized components for
 - Progress reporting and summary statistics
 - Error handling and graceful shutdown
 
-**CLI Options**:
+**CLI Commands & Options**:
 ```bash
---max-pages N        # Limit scraping to N pages
---start-page N       # Start from specific page
---csv-path PATH      # Custom CSV output location
---proxy URL          # HTTP/HTTPS proxy configuration
---clear-data         # Clear existing data before starting
---verbose            # Enable detailed logging
---dry-run            # Test configuration without scraping
+# Products command (default: 10 pages)
+products --max-pages N      # Limit scraping to N pages (default: 10, use 0 for all)
+products --start-page N     # Start from specific page (default: 1)
+products --csv-path PATH    # Custom CSV output (default: data/etsy_products.csv)
+products --clear-data       # Clear existing data before starting
+
+# Shops command (default: 100 items)
+shops --max-items N         # Maximum items to process (default: 100, use 0 for all)
+shops --products-csv PATH   # Input products CSV (default: data/etsy_products.csv)
+shops --output-csv PATH     # Output CSV (default: data/shops_from_listings.csv)
+
+# Metrics command (default: 100 shops)
+metrics --max-items N       # Maximum shops to process (default: 100, use 0 for all)
+metrics --shops-csv PATH    # Input shops CSV (default: data/shops_from_listings.csv)
+metrics --output-csv PATH   # Output CSV (default: data/shop_metrics.csv)
+
+# Global options
+--proxy URL                 # HTTP/HTTPS proxy configuration
+--verbose                   # Enable detailed logging
+--dry-run                   # Test configuration without scraping
 ```
 
 ### 2. Core Scraper (`scrapers/etsy_template_scraper.py`)
@@ -211,6 +224,31 @@ The modular architecture supports comprehensive testing:
 - Resume functionality
 - CLI interface validation
 - Data integrity across full runs
+
+## Test Implementation
+
+The test suite consists of:
+
+### Unit Tests (`tests/unit/`)
+- **test_config.py**: Validates all configuration settings, paths, and environment handling
+- **test_scraper.py**: Tests core EtsyScraper class and its methods
+- **test_data_manager.py**: Verifies CSV operations, deduplication, and data persistence
+- **test_html_parser.py**: Tests HTML extraction and parsing logic
+
+### Integration Tests (`tests/integration/`)
+- **test_pipeline.py**: End-to-end workflow testing, CLI execution, data flow validation
+
+### Coverage Goals
+- Target: 90% overall coverage
+- Current highlights:
+  - core/config.py: 100% coverage
+  - Comprehensive test cases: 100+ tests
+  - No mocks policy ensures real-world validation
+
+### Special Testing Notes
+- **Import Mocking**: Tests mock curl_cffi import to avoid dependency issues during testing
+- **No Mock Policy**: Tests use real data and APIs, not mocks
+- **Coverage Reporting**: Configured in pyproject.toml with detailed reporting
 
 ## Performance Characteristics
 

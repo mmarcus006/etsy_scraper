@@ -131,13 +131,30 @@ head -5 data/etsy_products.csv
 Get-Content data/etsy_products.csv | Select-Object -First 5
 ```
 
-### 3. Resume Scraping
+### 3. Complete Pipeline
+
+**Run all operations (products → shops → metrics)**:
+```bash
+uv run python src/etsy_scraper/cli.py all
+```
+
+**Extract shops from listings**:
+```bash
+uv run python src/etsy_scraper/cli.py shops
+```
+
+**Extract shop metrics**:
+```bash
+uv run python src/etsy_scraper/cli.py metrics
+```
+
+### 4. Resume Scraping
 
 The scraper automatically resumes from the last scraped page:
 
 ```bash
 # This will continue from where you left off
-uv run python src/etsy_scraper/scrapers/scraper_main.py
+uv run python src/etsy_scraper/cli.py products
 ```
 
 ## Advanced Usage
@@ -146,51 +163,75 @@ uv run python src/etsy_scraper/scrapers/scraper_main.py
 
 **Complete Command Structure**:
 ```bash
-uv run python src/etsy_scraper/scrapers/scraper_main.py [OPTIONS]
+uv run python src/etsy_scraper/cli.py <command> [OPTIONS]
 ```
 
-**All Available Options**:
+**Available Commands**:
+- `products`: Scrape product listings (default: 10 pages)
+- `shops`: Extract shops from listings (default: 100 items)
+- `metrics`: Extract shop metrics (default: 100 shops)
+- `all`: Run complete pipeline
+
+**Products Command Options**:
 ```bash
-# Page control
---max-pages 10           # Limit to 10 pages
---start-page 5           # Start from page 5
-
-# Output configuration
---csv-path custom.csv    # Custom output file
+--max-pages 10           # Limit to 10 pages (default: 10, use 0 for all)
+--start-page 5           # Start from page 5 (default: 1)
+--csv-path custom.csv    # Custom output file (default: data/etsy_products.csv)
 --clear-data            # Clear existing data first
+```
 
-# Network configuration
+**Shops/Metrics Command Options**:
+```bash
+--max-items 100         # Maximum items to process (default: 100, use 0 for all)
+--products-csv PATH     # Input products CSV (shops command)
+--shops-csv PATH        # Input shops CSV (metrics command)
+--output-csv PATH       # Output CSV path
+```
+
+**Global Options**:
+```bash
 --proxy http://user:pass@host:port  # Use proxy
-
-# Debugging and testing
 --verbose               # Detailed logging
 --dry-run              # Test configuration only
 ```
 
 ### Common Usage Patterns
 
-**1. Full Category Scrape**:
+**1. Quick Start (Uses Defaults)**:
 ```bash
-# Scrape all pages in template category
-uv run python src/etsy_scraper/scrapers/scraper_main.py --verbose
+# Scrape 10 pages with all defaults
+uv run python src/etsy_scraper/cli.py products
 ```
 
-**2. Limited Scraping for Testing**:
+**2. Complete Pipeline**:
+```bash
+# Run all operations: products → shops → metrics
+uv run python src/etsy_scraper/cli.py all
+```
+
+**3. Limited Scraping for Testing**:
 ```bash
 # Test with first 3 pages
-uv run python src/etsy_scraper/scrapers/scraper_main.py --max-pages 3 --verbose
+uv run python src/etsy_scraper/cli.py products --max-pages 3 --verbose
 ```
 
-**3. Fresh Start**:
+**4. Fresh Start**:
 ```bash
 # Clear existing data and start over
-uv run python src/etsy_scraper/scrapers/scraper_main.py --clear-data --max-pages 10
+uv run python src/etsy_scraper/cli.py products --clear-data --max-pages 10
 ```
 
-**4. Custom Output Location**:
+**5. Custom Output Location**:
 ```bash
 # Save to specific file
-uv run python src/etsy_scraper/scrapers/scraper_main.py --csv-path exports/products_$(date +%Y%m%d).csv --max-pages 5
+uv run python src/etsy_scraper/cli.py products --csv-path exports/products_$(date +%Y%m%d).csv --max-pages 5
+```
+
+**6. Process All Available Data**:
+```bash
+# Use 0 to process all pages/items
+uv run python src/etsy_scraper/cli.py products --max-pages 0
+uv run python src/etsy_scraper/cli.py shops --max-items 0
 ```
 
 ## Understanding Output
@@ -287,19 +328,33 @@ uv run python src/etsy_scraper/scrapers/scraper_main.py --proxy http://proxy:por
 
 ### Running Tests
 
+The project includes comprehensive unit and integration tests with a no-mock policy.
+
 ```bash
 # Install development dependencies
 uv sync --dev
 
+# Run all tests with coverage
+uv run pytest tests/ --cov=src --cov-report=term-missing
+
 # Run all tests
 uv run pytest
 
-# Run with coverage
-uv run pytest --cov=src --cov-report=term-missing
+# Run specific test file
+uv run pytest tests/unit/test_config.py
 
 # Quick test run
 uv run pytest -q
+
+# Verbose test output
+uv run pytest -v
 ```
+
+#### Test Coverage
+- **Target**: 90% overall coverage
+- **Current**: core/config.py at 100% coverage
+- **Philosophy**: No mocks - all tests use real APIs and data
+- **Structure**: 5 test modules covering unit and integration scenarios
 
 ### Code Quality Tools
 

@@ -7,7 +7,7 @@ from typing import Optional
 
 from colorama import Fore, Style, init
 
-from etsy_scraper.config.settings import LOG_FORMAT, LOG_LEVEL, LOGS_DIR
+from etsy_scraper.core.config import LOG_FORMAT, LOG_LEVEL, LOGS_DIR
 
 # Initialize colorama for Windows
 init(autoreset=True)

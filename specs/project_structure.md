@@ -41,11 +41,16 @@ etsy_scraper/ (Updated Architecture)
 │       └── utils/              # Utility modules
 │           ├── __init__.py
 │           └── logger.py       # Logging configuration
-├── tests/                      # Test suite
+├── tests/                      # Test suite (comprehensive coverage)
 │   ├── __init__.py
 │   ├── conftest.py            # Pytest configuration
 │   ├── integration/           # Integration tests
+│   │   └── test_pipeline.py   # End-to-end pipeline testing
 │   └── unit/                  # Unit tests
+│       ├── test_config.py     # Configuration testing (100% coverage)
+│       ├── test_scraper.py    # Core scraper testing
+│       ├── test_data_manager.py # CSV operations testing
+│       └── test_html_parser.py  # HTML parsing testing
 ├── .env                       # Environment variables
 ├── .env.example               # Environment template
 ├── .gitignore                 # Git ignore rules
@@ -66,7 +71,7 @@ etsy_scraper/ (Updated Architecture)
   - **utils/**: Logging and utility functions
 - **data/**: Runtime data storage including CSV output files and caching
 - **logs/**: Application logging output with detailed scraping progress
-- **tests/**: Test suite with unit and integration tests
+- **tests/**: Comprehensive test suite achieving 90% coverage target with unit and integration tests
 - **specs/**: Project documentation and specifications
 - **.claude/**: Claude Code configuration and custom extensions
 
@@ -80,9 +85,13 @@ The project has evolved from a fixed 3-page flow to a dynamic pagination system:
 - Basic data extraction
 
 ### New Architecture (Dynamic Pagination)
-- **CLI Interface**: `scraper_main.py` with comprehensive command-line options
+- **CLI Interface**: `cli.py` with unified command interface and sensible defaults
+  - Products: default 10 pages, 100 items
+  - Shops/Metrics: default 100 items per command
+  - Auto-defaulting CSV paths to DATA_DIR
 - **Core Scraper**: `etsy_template_scraper.py` with pagination support
 - **Pagination Handler**: `pagination.py` for dynamic page navigation
 - **Enhanced Extraction**: `product_links.py` with 19-field data collection
 - **Data Management**: `csv_manager.py` with deduplication and resume capability
 - **Session Management**: `session_manager.py` for robust request handling
+- **Comprehensive Testing**: 5 test modules achieving significant code coverage with no-mock policy

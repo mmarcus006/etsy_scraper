@@ -19,9 +19,9 @@ A comprehensive web scraping project for extracting product data from Etsy's tem
    uv sync
    ```
 
-2. **Run Basic Scraping** (first 5 pages):
+2. **Run Basic Scraping** (uses default: 10 pages):
    ```bash
-   uv run python src/etsy_scraper/scrapers/scraper_main.py --max-pages 5
+   uv run python src/etsy_scraper/cli.py products
    ```
 
 3. **View Results**:
@@ -35,35 +35,60 @@ A comprehensive web scraping project for extracting product data from Etsy's tem
 ### CLI Commands
 
 ```bash
-# Scrape first 5 pages
-uv run python src/etsy_scraper/scrapers/scraper_main.py --max-pages 5
+# Scrape products with defaults (10 pages, 100 items)
+uv run python src/etsy_scraper/cli.py products
+
+# Scrape specific number of pages
+uv run python src/etsy_scraper/cli.py products --max-pages 5
 
 # Resume from specific page
-uv run python src/etsy_scraper/scrapers/scraper_main.py --start-page 10
+uv run python src/etsy_scraper/cli.py products --start-page 10
 
 # Scrape with custom CSV output path
-uv run python src/etsy_scraper/scrapers/scraper_main.py --csv-path my_products.csv
+uv run python src/etsy_scraper/cli.py products --csv-path my_products.csv
 
 # Clear existing data and start fresh
-uv run python src/etsy_scraper/scrapers/scraper_main.py --clear-data --max-pages 10
+uv run python src/etsy_scraper/cli.py products --clear-data --max-pages 10
+
+# Extract shops from listings
+uv run python src/etsy_scraper/cli.py shops
+
+# Extract shop metrics
+uv run python src/etsy_scraper/cli.py metrics
+
+# Run complete pipeline
+uv run python src/etsy_scraper/cli.py all
 
 # Verbose logging
-uv run python src/etsy_scraper/scrapers/scraper_main.py --verbose --max-pages 3
+uv run python src/etsy_scraper/cli.py products --verbose --max-pages 3
 
 # Dry run (test configuration)
-uv run python src/etsy_scraper/scrapers/scraper_main.py --dry-run
+uv run python src/etsy_scraper/cli.py products --dry-run
 
 # Use proxy
-uv run python src/etsy_scraper/scrapers/scraper_main.py --proxy http://user:pass@host:port
+uv run python src/etsy_scraper/cli.py products --proxy http://user:pass@host:port
 ```
 
-### CLI Options
+### CLI Commands & Options
 
-- `--max-pages N`: Limit scraping to N pages (default: all pages)
-- `--start-page N`: Start from page N (default: 1 or resume from last)
-- `--csv-path PATH`: Custom CSV output file path
-- `--proxy URL`: Use HTTP/HTTPS proxy
+#### Products Command
+- `--max-pages N`: Limit scraping to N pages (default: 10, use 0 for all pages)
+- `--start-page N`: Start from page N (default: 1)
+- `--csv-path PATH`: Custom CSV output file path (default: data/etsy_products.csv)
 - `--clear-data`: Clear existing data before starting
+
+#### Shops Command
+- `--products-csv PATH`: Path to products CSV (default: data/etsy_products.csv)
+- `--output-csv PATH`: Output CSV path (default: data/shops_from_listings.csv)
+- `--max-items N`: Maximum items to process (default: 100, use 0 for all items)
+
+#### Metrics Command
+- `--shops-csv PATH`: Path to shops CSV (default: data/shops_from_listings.csv)
+- `--output-csv PATH`: Output CSV path (default: data/shop_metrics.csv)
+- `--max-items N`: Maximum shops to process (default: 100, use 0 for all shops)
+
+#### Global Options
+- `--proxy URL`: Use HTTP/HTTPS proxy
 - `--verbose`: Enable detailed logging
 - `--dry-run`: Test configuration without scraping
 
@@ -118,16 +143,33 @@ uv sync
 ```
 
 ### Testing
+
+The project includes comprehensive unit and integration tests with a no-mock policy - all tests use actual APIs and real data.
+
 ```bash
+# Run all tests with coverage
+uv run pytest tests/ --cov=src --cov-report=term-missing
+
 # Run all tests
 uv run pytest
 
-# Quick test run
+# Run tests with minimal output
 uv run pytest -q
 
-# Run with coverage
-uv run pytest --cov=src --cov-report=term-missing
+# Run specific test file
+uv run pytest tests/unit/test_config.py
+
+# Run tests with verbose output
+uv run pytest -v
 ```
+
+#### Test Coverage
+
+The project aims for 90% test coverage with comprehensive unit and integration tests:
+- **Configuration**: 100% coverage achieved
+- **Core modules**: Tests for scraper, data manager, extractors
+- **Integration**: End-to-end pipeline testing
+- **No mock policy**: All tests use real data and APIs for validation
 
 ### Code Quality
 ```bash
