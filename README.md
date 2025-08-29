@@ -4,13 +4,15 @@ A comprehensive web scraping project for extracting product data from Etsy's tem
 
 ## Features
 
-- **Dynamic Pagination**: Automatically navigates through all category pages
-- **Comprehensive Data Extraction**: Extracts 19 fields per product including pricing, ratings, and seller information
-- **Advertisement Detection**: Identifies sponsored/promoted listings
-- **Resume Capability**: Continues from last scraped page to avoid duplicates
-- **CLI Interface**: Command-line interface with flexible options
-- **DataDome Bypass**: Uses curl-cffi with browser impersonation
-- **CSV Storage**: Saves data with deduplication and progress tracking
+- **🌐 Streamlit GUI**: Modern web interface with real-time monitoring and data visualization
+- **📊 Progress Tracking**: Visual progress bars with ETA and speed indicators for all operations
+- **🔧 Dynamic Pagination**: Automatically navigates through all category pages
+- **📋 Comprehensive Data Extraction**: Extracts 19 fields per product including pricing, ratings, and seller information
+- **🎯 Advertisement Detection**: Identifies sponsored/promoted listings
+- **⚡ Resume Capability**: Continues from last scraped page to avoid duplicates
+- **💻 CLI Interface**: Command-line interface with flexible options and type safety
+- **🛡️ DataDome Bypass**: Uses curl-cffi with browser impersonation
+- **💾 CSV Storage**: Saves data with deduplication and progress tracking
 
 ## Quick Start
 
@@ -29,6 +31,45 @@ A comprehensive web scraping project for extracting product data from Etsy's tem
    # Check the generated CSV file
    ls data/etsy_products.csv
    ```
+
+## GUI Interface
+
+The Etsy scraper now includes a modern web-based GUI for easier operation and monitoring.
+
+### 🚀 Quick Launch
+
+**Windows (Double-click)**:
+```
+run_gui.bat
+```
+
+**Mac/Linux/Windows (Command line)**:
+```bash
+uv run streamlit run gui.py
+```
+
+**Alternative Python launcher**:
+```bash
+uv run python run_gui.py
+```
+
+### 🎯 GUI Features
+
+The GUI provides five comprehensive tabs:
+
+- **📊 Dashboard**: Overview of scraping progress and data statistics
+- **⚙️ Configuration**: Visual configuration management with save/load profiles
+- **🏃 Run Scraper**: Execute scraping operations with real-time progress monitoring
+- **📋 Data Viewer**: Browse, search, filter, and export CSV data with Plotly visualizations
+- **📝 Logs**: Live log streaming with filtering and search capabilities
+
+**Key Benefits**:
+- Real-time progress tracking with visual indicators
+- Data visualization with interactive charts
+- Configuration profiles for different scraping scenarios
+- CSV data browser with advanced filtering
+- Live log monitoring without command line
+- One-click exports and data management
 
 ## Usage
 
@@ -67,6 +108,9 @@ uv run python src/etsy_scraper/cli.py products --dry-run
 
 # Use proxy
 uv run python src/etsy_scraper/cli.py products --proxy http://user:pass@host:port
+
+# Launch GUI interface
+uv run streamlit run gui.py
 ```
 
 ### CLI Commands & Options

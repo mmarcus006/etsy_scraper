@@ -4,9 +4,9 @@ Extracts pagination info and generates next page URLs.
 """
 
 import re
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Any
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import logging
 
 logger = logging.getLogger(__name__)
@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 class PaginationHandler:
     """Handles pagination logic for Etsy category/search pages."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize pagination handler."""
         self.page_param_names = ['page', 'ref', 'anchor']
         
-    def extract_pagination_info(self, html_content: str) -> Dict:
+    def extract_pagination_info(self, html_content: str) -> Dict[str, Any]:
         """
         Extract pagination information from page HTML.
         
@@ -69,7 +69,7 @@ class PaginationHandler:
         logger.debug(f"Pagination info: {info}")
         return info
     
-    def _parse_pagination_nav(self, nav_element) -> Dict:
+    def _parse_pagination_nav(self, nav_element: Tag) -> Dict[str, Any]:
         """Parse pagination nav element."""
         info = {}
         
@@ -105,7 +105,7 @@ class PaginationHandler:
         
         return info
     
-    def _parse_page_links(self, soup) -> Dict:
+    def _parse_page_links(self, soup: BeautifulSoup) -> Dict[str, Any]:
         """Parse page links from the entire page."""
         info = {}
         

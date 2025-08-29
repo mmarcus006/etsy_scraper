@@ -3,13 +3,24 @@ Unified Etsy scraper with modular architecture.
 Handles products, shops, and metrics extraction using existing utilities.
 """
 
+import datetime
+import os
 import time
 import random
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, List, Tuple, Any
 from pathlib import Path
 from bs4 import BeautifulSoup
-from curl_cffi.requests import Session
 import logging
+import sys
+from tqdm import tqdm
+
+try:
+    from curl_cffi.requests import Session
+    from curl_cffi.requests import Response
+except ImportError as e:
+    logging.error("curl_cffi is not installed. Please install it using: uv add curl-cffi")
+    logging.error(f"Import error: {e}")
+    sys.exit(1)
 
 from etsy_scraper.core.config import (
     URLS, HEADERS, CURL_CONFIG, TIMING, VALIDATION,
@@ -26,7 +37,7 @@ logger = logging.getLogger(__name__)
 class EtsyScraper:
     """Unified scraper for all Etsy data extraction needs."""
     
-    def __init__(self, proxy: Optional[Dict] = None):
+    def __init__(self, proxy: Optional[Dict[str, str]] = None) -> None:
         """
         Initialize the Etsy scraper.
         
@@ -78,6 +89,16 @@ class EtsyScraper:
                 allow_redirects=CURL_CONFIG["allow_redirects"],
                 proxies=self.proxy
             )
+            if response.status_code == 200:
+                logger.info(f"Successfully loaded page {url}")
+                #create new folder with todays name, and write contents of response to file with the page number in the file name
+#                today = datetime.datetime.now().strftime("%Y-%m-%d")
+#                os.makedirs(today, exist_ok=True)
+#                with open(f"{today}/page_{url.split('page=')[1]}.html", "w") as f:
+#                    f.write(response.text)
+#            else:
+#                logger.error(f"Failed to load page {url} with status code #{response.status_code}")
+#                return response.status_code, ""
             
             if self._is_blocked(response):
                 logger.warning(f"Block detected on {url}")
@@ -92,7 +113,7 @@ class EtsyScraper:
             self.stats["errors"] += 1
             return 0, ""
     
-    def _is_blocked(self, response) -> bool:
+    def _is_blocked(self, response: Response) -> bool:
         """Check if response indicates bot detection."""
         if response.status_code in VALIDATION["blocked_status_codes"]:
             return True
@@ -109,7 +130,7 @@ class EtsyScraper:
     
     def scrape_products(self, max_pages: Optional[int] = None, 
                        start_page: int = 1,
-                       csv_path: Optional[str] = None) -> Dict:
+                       csv_path: Optional[str] = None) -> Dict[str, Any]:
         """
         Scrape product listings with pagination.
         
@@ -139,56 +160,64 @@ class EtsyScraper:
         base_url = URLS["templates"]
         referer = None
         
-        while True:
-            # Check max pages
-            if max_pages and (current_page - start_page + 1) > max_pages:
-                logger.info(f"Reached max pages limit: {max_pages}")
-                break
+        # Calculate total pages for progress bar
+        total_pages = max_pages if max_pages else 100  # Estimate 100 if unlimited
+        
+        # Create progress bar for pages
+        with tqdm(total=total_pages, desc="Scraping pages", unit="page", 
+                  initial=current_page - start_page) as pbar:
             
-            # Build URL
-            url = base_url if current_page == 1 else self.pagination.build_page_url(base_url, current_page)
-            
-            # Rate limiting
-            if current_page > start_page:
-                self.rate_limiter.wait_if_needed()
-            
-            # Make request
-            logger.info(f"Scraping page {current_page}: {url}")
-            status, content = self._make_request(url, referer)
-            
-            if status != 200:
-                logger.error(f"Failed to load page {current_page}")
-                if current_page < 10:  # Try early pages more aggressively
-                    current_page += 1
-                    continue
-                else:
+            while True:
+                # Check max pages
+                if max_pages and (current_page - start_page + 1) > max_pages:
+                    logger.info(f"Reached max pages limit: {max_pages}")
                     break
-            
-            # Extract products
-            products = self.extractor.extract_products(content)
-            logger.info(f"Found {len(products)} products on page {current_page}")
-            
-            # Save to CSV
-            if products:
-                save_stats = data_manager.save_items(products, current_page)
-                self.stats["items_found"] += save_stats["total"]
-                self.stats["items_saved"] += save_stats["saved"]
-                self.stats["duplicates"] += save_stats["duplicates"]
-            
-            self.stats["pages_scraped"] += 1
-            
-            # Check for next page
-            pagination_info = self.pagination.extract_pagination_info(content)
-            if not pagination_info["has_next"]:
-                logger.info("No more pages to scrape")
-                break
-            
-            referer = url
-            current_page += 1
-            
-            # Progress update
-            if current_page % 5 == 0:
-                self._log_progress()
+                
+                # Build URL
+                url = base_url if current_page == 1 else self.pagination.build_page_url(base_url, current_page)
+                
+                # Rate limiting
+                if current_page > start_page:
+                    self.rate_limiter.wait_if_needed()
+                
+                # Make request
+                logger.info(f"Scraping page {current_page}: {url}")
+                status, content = self._make_request(url, referer)
+                
+                if status != 200:
+                    logger.error(f"Failed to load page {current_page}")
+                    if current_page < 10:  # Try early pages more aggressively
+                        current_page += 1
+                        continue
+                    else:
+                        break
+                
+                # Extract products
+                products = self.extractor.extract_products(content)
+                logger.info(f"Found {len(products)} products on page {current_page}")
+                
+                # Save to CSV
+                if products:
+                    save_stats = data_manager.save_items(products, current_page)
+                    self.stats["items_found"] += save_stats["total"]
+                    self.stats["items_saved"] += save_stats["saved"]
+                    self.stats["duplicates"] += save_stats["duplicates"]
+                
+                self.stats["pages_scraped"] += 1
+                
+                # Check for next page
+                pagination_info = self.pagination.extract_pagination_info(content)
+                if not pagination_info["has_next"]:
+                    logger.info("No more pages to scrape")
+                    break
+                
+                referer = url
+                current_page += 1
+                pbar.update(1)  # Update progress bar
+                
+                # Progress update
+                if current_page % 5 == 0:
+                    self._log_progress()
         
         self._log_final_stats()
         
@@ -200,7 +229,7 @@ class EtsyScraper:
     
     def scrape_shops_from_listings(self, products_csv: Optional[str] = None,
                                   output_csv: Optional[str] = None,
-                                  max_items: Optional[int] = None) -> Dict:
+                                  max_items: Optional[int] = None) -> Dict[str, Any]:
         """
         Extract shop information from product listings.
         
@@ -227,31 +256,35 @@ class EtsyScraper:
             return {"success": False, "stats": self.stats}
         
         processed = 0
-        for product in products:
-            if max_items and processed >= max_items:
-                break
-            
-            listing_url = product.get("url", "")
-            if not listing_url or shops_dm.is_processed(listing_url):
-                continue
-            
-            # Rate limiting
-            self.rate_limiter.wait_if_needed()
-            
-            # Fetch listing page
-            status, content = self._make_request(listing_url)
-            if status == 200:
-                shop_info = self.extractor.extract_shop_from_listing(content)
-                if shop_info and shop_info.get("shop_name"):
-                    shop_info["listing_url"] = listing_url
-                    save_stats = shops_dm.save_items([shop_info])
-                    self.stats["items_saved"] += save_stats["saved"]
-            
-            processed += 1
-            self.stats["items_found"] += 1
-            
-            if processed % 10 == 0:
-                logger.info(f"Processed {processed} listings, found {self.stats['items_saved']} shops")
+        items_to_process = min(len(products), max_items) if max_items else len(products)
+        
+        with tqdm(total=items_to_process, desc="Extracting shops", unit="listing") as pbar:
+            for product in products:
+                if max_items and processed >= max_items:
+                    break
+                
+                listing_url = product.get("url", "")
+                if not listing_url or shops_dm.is_processed(listing_url):
+                    continue
+                
+                # Rate limiting
+                self.rate_limiter.wait_if_needed()
+                
+                # Fetch listing page
+                status, content = self._make_request(listing_url)
+                if status == 200:
+                    shop_info = self.extractor.extract_shop_from_listing(content)
+                    if shop_info and shop_info.get("shop_name"):
+                        shop_info["listing_url"] = listing_url
+                        save_stats = shops_dm.save_items([shop_info])
+                        self.stats["items_saved"] += save_stats["saved"]
+                
+                processed += 1
+                self.stats["items_found"] += 1
+                pbar.update(1)
+                
+                if processed % 10 == 0:
+                    logger.info(f"Processed {processed} listings, found {self.stats['items_saved']} shops")
         
         return {
             "success": True,
@@ -261,7 +294,7 @@ class EtsyScraper:
     
     def scrape_shop_metrics(self, shops_csv: Optional[str] = None,
                           output_csv: Optional[str] = None,
-                          max_shops: Optional[int] = None) -> Dict:
+                          max_shops: Optional[int] = None) -> Dict[str, Any]:
         """
         Extract metrics (sales, admirers) from shop pages.
         
@@ -288,34 +321,38 @@ class EtsyScraper:
             return {"success": False, "stats": self.stats}
         
         processed = 0
-        for shop in shops:
-            if max_shops and processed >= max_shops:
-                break
-            
-            shop_name = shop.get("shop_name", "")
-            shop_url = shop.get("shop_url", "")
-            
-            if not shop_url or metrics_dm.is_processed(shop_name):
-                continue
-            
-            # Rate limiting
-            self.rate_limiter.wait_if_needed()
-            
-            # Fetch shop page
-            status, content = self._make_request(shop_url)
-            if status == 200:
-                metrics = self.extractor.extract_shop_metrics(content)
-                metrics["shop_name"] = shop_name
-                metrics["shop_url"] = shop_url
+        shops_to_process = min(len(shops), max_shops) if max_shops else len(shops)
+        
+        with tqdm(total=shops_to_process, desc="Extracting metrics", unit="shop") as pbar:
+            for shop in shops:
+                if max_shops and processed >= max_shops:
+                    break
                 
-                save_stats = metrics_dm.save_items([metrics])
-                self.stats["items_saved"] += save_stats["saved"]
-            
-            processed += 1
-            self.stats["items_found"] += 1
-            
-            if processed % 10 == 0:
-                logger.info(f"Processed {processed} shops")
+                shop_name = shop.get("shop_name", "")
+                shop_url = shop.get("shop_url", "")
+                
+                if not shop_url or metrics_dm.is_processed(shop_name):
+                    continue
+                
+                # Rate limiting
+                self.rate_limiter.wait_if_needed()
+                
+                # Fetch shop page
+                status, content = self._make_request(shop_url)
+                if status == 200:
+                    metrics = self.extractor.extract_shop_metrics(content)
+                    metrics["shop_name"] = shop_name
+                    metrics["shop_url"] = shop_url
+                    
+                    save_stats = metrics_dm.save_items([metrics])
+                    self.stats["items_saved"] += save_stats["saved"]
+                
+                processed += 1
+                self.stats["items_found"] += 1
+                pbar.update(1)
+                
+                if processed % 10 == 0:
+                    logger.info(f"Processed {processed} shops")
         
         return {
             "success": True,
@@ -323,7 +360,7 @@ class EtsyScraper:
             "total_shops": metrics_dm.get_count()
         }
     
-    def _log_progress(self):
+    def _log_progress(self) -> None:
         """Log scraping progress."""
         logger.info("-" * 50)
         logger.info(f"Progress: Pages={self.stats['pages_scraped']}, "
@@ -332,7 +369,7 @@ class EtsyScraper:
                    f"Duplicates={self.stats['duplicates']}")
         logger.info("-" * 50)
     
-    def _log_final_stats(self):
+    def _log_final_stats(self) -> None:
         """Log final statistics."""
         logger.info("="*60)
         logger.info("Scraping Complete:")
@@ -340,7 +377,7 @@ class EtsyScraper:
             logger.info(f"  {key}: {value}")
         logger.info("="*60)
     
-    def close(self):
+    def close(self) -> None:
         """Clean up resources."""
         if self.session_manager:
             self.session_manager.close()

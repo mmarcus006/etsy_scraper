@@ -111,4 +111,4 @@ LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
 # Environment-based settings
 PROXY_URL = os.getenv("PROXY_URL")
-MAX_PAGES = int(os.getenv("MAX_PAGES_TO_SCRAPE", "0"))  # 0 means all pages
+MAX_PAGES = int(os.getenv("MAX_PAGES_TO_SCRAPE", "1000"))  # Default to 10 pages for safety

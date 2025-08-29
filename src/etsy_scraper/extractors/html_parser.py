@@ -4,8 +4,8 @@ Handles product, shop, and metrics extraction in a streamlined manner.
 """
 
 import re
-from typing import Dict, List, Optional
-from bs4 import BeautifulSoup
+from typing import Dict, List, Optional, Any, Union
+from bs4 import BeautifulSoup, Tag, NavigableString
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 class DataExtractor:
     """Unified extractor for all Etsy data types."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the extractor."""
         self.listing_id_pattern = re.compile(r'/listing/(\d+)/')
         self.shop_pattern = re.compile(r'/shop/([^/?]+)')
     
-    def extract_products(self, html_content: str) -> List[Dict]:
+    def extract_products(self, html_content: str) -> List[Dict[str, Any]]:
         """
         Extract product data from category/search pages.
         
@@ -57,7 +57,7 @@ class DataExtractor:
         
         return products
     
-    def _extract_product_from_card(self, card) -> Optional[Dict]:
+    def _extract_product_from_card(self, card: Union[Tag, NavigableString]) -> Optional[Dict[str, Any]]:
         """Extract data from a single product card."""
         product = {
             'listing_id': '',
@@ -169,7 +169,7 @@ class DataExtractor:
         
         return product if product['listing_id'] else None
     
-    def extract_shop_from_listing(self, html_content: str) -> Dict:
+    def extract_shop_from_listing(self, html_content: str) -> Dict[str, str]:
         """
         Extract shop information from a listing page.
         
@@ -203,7 +203,7 @@ class DataExtractor:
         logger.info(f"Extracted shop: {shop_info['shop_name']}")
         return shop_info
     
-    def extract_shop_metrics(self, html_content: str) -> Dict:
+    def extract_shop_metrics(self, html_content: str) -> Dict[str, Any]:
         """
         Extract sales and admirers from a shop page.
         

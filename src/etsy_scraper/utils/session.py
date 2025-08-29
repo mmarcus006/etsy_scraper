@@ -6,8 +6,15 @@ Handles retries, session rotation, and error recovery.
 import time
 import random
 from typing import Dict, Optional, Tuple, Callable
-from curl_cffi.requests import Session
 import logging
+import sys
+
+try:
+    from curl_cffi.requests import Session
+except ImportError as e:
+    logging.error("curl_cffi is not installed. Please install it using: uv add curl-cffi")
+    logging.error(f"Import error: {e}")
+    sys.exit(1)
 
 logger = logging.getLogger(__name__)
 
@@ -160,7 +167,7 @@ class SessionManager:
             wait_time: Time to wait in seconds (default: random 30-60)
         """
         if wait_time is None:
-            wait_time = random.randint(30, 60)
+            wait_time = random.randint(1, 10)
             
         logger.warning(f"Block detected. Waiting {wait_time} seconds...")
         time.sleep(wait_time)

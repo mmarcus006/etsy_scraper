@@ -303,10 +303,10 @@ def main():
     
     args = parser.parse_args()
     
-    # Set default command if none provided
+    # If no subcommand provided, default to running 'products' with defaults
     if not args.command:
-        parser.print_help()
-        return 1
+        argv_with_default = sys.argv[1:] + ["products"]
+        args = parser.parse_args(argv_with_default)
     
     # Set logging level
     if args.verbose:
