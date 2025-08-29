@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "playwright>=1.40.0",
+    "curl-cffi>=0.6.0",
     "requests>=2.31.0",
     "cloudscraper>=1.2.71",
     "beautifulsoup4>=4.12.2",

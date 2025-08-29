@@ -17,9 +17,9 @@ from config.etsy_flow_config import (
     URLS, HEADERS, SESSION_PARAMS, TIMING, 
     CURL_CFFI_CONFIG, VALIDATION, get_random_delay
 )
-from utils.logger import get_logger
+from utils.logger import setup_logger
 
-logger = get_logger(__name__)
+logger = setup_logger(__name__)
 
 
 class EtsyFlowCurlCffi:
