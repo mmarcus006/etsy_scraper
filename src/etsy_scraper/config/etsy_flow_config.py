@@ -6,11 +6,10 @@ Extracted from HAR file analysis
 import random
 from typing import Dict, List
 
-# URLs for the three-page flow
+# URLs for scraping
 URLS = {
     "templates": "https://www.etsy.com/c/paper-and-party-supplies/paper/stationery/design-and-templates/templates/personal-finance-templates?explicit=1&ref=catcard-12487-1840465169",
-    "listing": "https://www.etsy.com/listing/4301730234/adhd-adult-digital-budget-planner-google?click_key=64daba22-01dd-406a-8a87-e6edd00f0a5e%3A999bc0964ee57659085a7c8fa3d0cdb4d7522aa4&click_sum=875fb93b&ls=s&ga_order=most_relevant&ga_search_type=all&ga_view_type=gallery&ga_search_query=&ref=search_grid-881298-1-4&pro=1&sts=1&dd=1&content_source=64daba22-01dd-406a-8a87-e6edd00f0a5e%253A999bc0964ee57659085a7c8fa3d0cdb4d7522aa4",
-    "shop": "https://www.etsy.com/shop/CustomGroupGifts?ref=shop_profile&listing_id=4301730234"
+    # Base URL for templates category - pagination will be added dynamically
 }
 
 # Critical headers from HAR file
@@ -46,15 +45,10 @@ SESSION_PARAMS = {
 
 # Timing configuration (in seconds)
 TIMING = {
-    "page1_to_page2": {
-        "min": 40,
-        "max": 55,
-        "original": 47  # From HAR file
-    },
-    "page2_to_page3": {
-        "min": 5,
-        "max": 12,
-        "original": 8  # From HAR file
+    "page_navigation": {
+        "min": 3,
+        "max": 8,
+        "description": "Delay between pagination pages"
     },
     "action_delay": {
         "min": 0.5,
@@ -63,6 +57,16 @@ TIMING = {
     "scroll_delay": {
         "min": 0.3,
         "max": 1.0
+    },
+    "retry_delay": {
+        "min": 5,
+        "max": 10,
+        "description": "Delay before retrying failed request"
+    },
+    "block_recovery": {
+        "min": 30,
+        "max": 60,
+        "description": "Delay after detecting bot block"
     }
 }
 
@@ -95,8 +99,8 @@ VALIDATION = {
         "dd-protection"
     ],
     "success_indicators": {
-        "templates_page": ["personal-finance-templates", "category_page"],
-        "listing_page": ["listing-id", "4301730234", "adhd-adult-digital"],
+        "templates_page": ["personal-finance-templates", "templates"],
+        "listing_page": ["listing-id", "adhd-adult-digital"],
         "shop_page": ["CustomGroupGifts", "shop-name"]
     }
 }
