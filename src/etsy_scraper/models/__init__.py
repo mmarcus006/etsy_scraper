@@ -1,0 +1,1 @@
+"""Data models for scraped Etsy data."""
