@@ -46,7 +46,10 @@
       "Read(C:\\Users\\Miller\\Downloads/**)",
       "Read(C:\\Users\\Miller\\Downloads/**)",
       "Read(C:\\Users\\Miller\\Downloads/**)",
-      "Read(C:\\Users\\Miller\\Downloads/**)"
+      "Read(C:\\Users\\Miller\\Downloads/**)",
+      "mcp__playwright__playwright_navigate",
+      "mcp__playwright__playwright_screenshot",
+      "mcp__playwright__playwright_evaluate"
     ],
     "deny": []
   },

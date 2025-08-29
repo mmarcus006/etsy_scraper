@@ -1,170 +1,360 @@
 # Setup Guide
 
+Complete setup instructions for the Etsy Template Scraper with dynamic pagination system.
+
 ## Prerequisites
 
-- **Python 3.11 or higher**: Required for running the application
-- **UV package manager**: Recommended for dependency management (install from https://github.com/astral-sh/uv)
-- **Git**: For version control
-- **Windows/Linux/macOS**: Cross-platform compatible
+### System Requirements
+- **Python**: Version 3.11 or higher
+- **Operating System**: Windows, macOS, or Linux
+- **Memory**: Minimum 2GB RAM (4GB recommended for large scraping tasks)
+- **Storage**: 1GB free space for data and logs
 
-## Installation Steps
+### Required Tools
+- **UV Package Manager**: Modern Python dependency management (replaces pip)
+- **Git**: For cloning the repository (if applicable)
 
-### 1. Clone the Repository
+## Installation
 
+### 1. Install UV Package Manager
+
+UV is the preferred dependency manager for this project, offering superior performance over pip.
+
+**Windows (PowerShell)**:
+```powershell
+# Download and install UV
+iwr -Uri "https://astral.sh/uv/install.ps1" -OutFile "install.ps1"; .\install.ps1
+```
+
+**macOS/Linux**:
 ```bash
+# Download and install UV
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Alternative (using pip)**:
+```bash
+pip install uv
+```
+
+### 2. Project Setup
+
+**Clone or Download Project**:
+```bash
+# If using git
 git clone <repository-url>
 cd etsy_scraper
+
+# Or download and extract ZIP file
 ```
 
-### 2. Set Up Python Environment
-
-Using UV (recommended):
+**Install Dependencies**:
 ```bash
-# UV automatically creates a virtual environment
+# This creates .venv automatically if it doesn't exist
 uv sync
 ```
 
-Alternative using venv:
+**Verify Installation**:
 ```bash
-# Windows PowerShell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-# Linux/macOS
-python -m venv .venv
-source .venv/bin/activate
+# Check that dependencies are installed
+uv run python -c "import curl_cffi; print('Dependencies installed successfully')"
 ```
 
-### 3. Install Dependencies
+## Configuration
 
-With UV:
+### 1. Environment Setup (Optional)
+
+Create a `.env` file for custom configurations:
+
 ```bash
-# Install all dependencies including dev tools
-uv sync
-
-# Or install without dev dependencies
-uv sync --no-dev
-```
-
-With pip:
-```bash
-# Install from requirements.txt
-pip install -r requirements.txt
-
-# Or install with dev dependencies
-pip install -e ".[dev]"
-```
-
-### 4. Configure Environment Variables
-
-Copy the example environment file and customize:
-```bash
+# Copy example environment file
 cp .env.example .env
 ```
 
-Edit `.env` and configure the following variables:
+Edit `.env` with your preferred settings:
+```env
+# Data output directory
+DATA_DIR=data
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `USER_AGENT` | Chrome 120 | Browser user agent string |
-| `REQUEST_TIMEOUT` | 30 | Request timeout in seconds |
-| `MAX_RETRIES` | 3 | Maximum retry attempts |
-| `RETRY_DELAY` | 5 | Delay between retries (seconds) |
-| `HEADLESS` | true | Run browser in headless mode |
-| `SLOW_MO` | 0 | Slow down browser actions (ms) |
-| `RATE_LIMIT_DELAY` | 1.0 | Delay between requests (seconds) |
-| `LOG_LEVEL` | INFO | Logging verbosity (DEBUG/INFO/WARNING/ERROR) |
-| `PROXY_URL` | None | Optional proxy server URL |
-| `MAX_PAGES_TO_SCRAPE` | 10 | Maximum pages to scrape |
-| `ITEMS_PER_PAGE` | 48 | Items per page for pagination |
+# Log level (DEBUG, INFO, WARNING, ERROR)
+LOG_LEVEL=INFO
 
-### 5. Install Playwright Browsers (if needed)
+# Default CSV output filename
+CSV_FILENAME=etsy_products.csv
 
-If using Playwright for advanced scraping:
-```bash
-uv run playwright install chromium
+# Request timeout in seconds
+REQUEST_TIMEOUT=30
 ```
 
-## Running the Application
+### 2. Directory Structure
 
-### Execute the Main Scraper
+The scraper will automatically create required directories:
+- `data/`: CSV output files and caching
+- `logs/`: Application log files
 
+## Quick Start
+
+### 1. Basic Scraping
+
+**Scrape first 5 pages**:
 ```bash
-# Run the Etsy flow scraper
-uv run python src/etsy_scraper/scrapers/etsy_flow_curl_cffi.py
+uv run python src/etsy_scraper/scrapers/scraper_main.py --max-pages 5
 ```
 
-### Run Tests
+**Expected Output**:
+```
+===============================================
+Etsy Template Category Scraper
+===============================================
+Extracts product links with pagination support
+Saves to CSV with deduplication
+===============================================
 
-```bash
-# Run all tests
-uv run pytest
-
-# Run with coverage report
-uv run pytest --cov=src --cov-report=term-missing
-
-# Run specific test file
-uv run pytest tests/unit/test_example.py -v
+[INFO] Initializing Etsy template scraper...
+[INFO] Starting scraping process...
+[INFO] Scraping page 1: https://www.etsy.com/market/templates
+[INFO] Found 64 products on page 1
+...
 ```
 
-### Code Quality Checks
+### 2. Check Results
 
+**View CSV Output**:
 ```bash
-# Format code with ruff
-uv run ruff format src/ tests/
+# Check generated file
+ls -la data/etsy_products.csv
 
-# Check linting issues
-uv run ruff check --fix src/ tests/
+# View first few rows (Unix/macOS/Linux)
+head -5 data/etsy_products.csv
 
-# Type checking
-uv run mypy src/
-
-# Alternative formatting with black
-uv run black src/ tests/
+# View first few rows (Windows PowerShell)
+Get-Content data/etsy_products.csv | Select-Object -First 5
 ```
 
-## Development Workflow
+### 3. Resume Scraping
 
-### Adding Dependencies
+The scraper automatically resumes from the last scraped page:
 
 ```bash
-# Add a runtime dependency
-uv add requests
-
-# Add a development dependency
-uv add --dev pytest
-
-# Update lock file
-uv lock
+# This will continue from where you left off
+uv run python src/etsy_scraper/scrapers/scraper_main.py
 ```
 
-### Project Structure
+## Advanced Usage
 
-After setup, your working directory should contain:
-- `.venv/`: Virtual environment (created by UV or manually)
-- `src/etsy_scraper/`: Main application code
-- `tests/`: Test suite
-- `data/`: Runtime data storage
-- `logs/`: Application logs
-- `.env`: Your environment configuration
+### CLI Command Reference
+
+**Complete Command Structure**:
+```bash
+uv run python src/etsy_scraper/scrapers/scraper_main.py [OPTIONS]
+```
+
+**All Available Options**:
+```bash
+# Page control
+--max-pages 10           # Limit to 10 pages
+--start-page 5           # Start from page 5
+
+# Output configuration
+--csv-path custom.csv    # Custom output file
+--clear-data            # Clear existing data first
+
+# Network configuration
+--proxy http://user:pass@host:port  # Use proxy
+
+# Debugging and testing
+--verbose               # Detailed logging
+--dry-run              # Test configuration only
+```
+
+### Common Usage Patterns
+
+**1. Full Category Scrape**:
+```bash
+# Scrape all pages in template category
+uv run python src/etsy_scraper/scrapers/scraper_main.py --verbose
+```
+
+**2. Limited Scraping for Testing**:
+```bash
+# Test with first 3 pages
+uv run python src/etsy_scraper/scrapers/scraper_main.py --max-pages 3 --verbose
+```
+
+**3. Fresh Start**:
+```bash
+# Clear existing data and start over
+uv run python src/etsy_scraper/scrapers/scraper_main.py --clear-data --max-pages 10
+```
+
+**4. Custom Output Location**:
+```bash
+# Save to specific file
+uv run python src/etsy_scraper/scrapers/scraper_main.py --csv-path exports/products_$(date +%Y%m%d).csv --max-pages 5
+```
+
+## Understanding Output
+
+### CSV Structure
+
+The scraper generates a CSV file with **19 columns**:
+
+**File Location**: `data/etsy_products.csv` (default)
+
+**Sample Output Structure**:
+```csv
+listing_id,url,title,shop_name,shop_url,sale_price,original_price,discount_percentage,is_on_sale,is_advertisement,is_digital_download,is_bestseller,is_star_seller,free_shipping,rating,review_count,page_number,extraction_date,position_on_page
+1234567,https://www.etsy.com/listing/1234567/...,Budget Tracker Template,ShopName,https://www.etsy.com/shop/ShopName,9.99,12.99,23.1,True,False,True,True,True,True,4.8,2156,1,2024-01-15T10:30:00Z,1
+```
+
+### Log Files
+
+**Location**: `logs/etsy_scraper.log`
+
+**Content Includes**:
+- Page scraping progress
+- Product extraction statistics
+- Error messages and warnings
+- DataDome detection alerts
+- Session management details
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Import errors**: Ensure virtual environment is activated
-2. **Missing dependencies**: Run `uv sync` to install all packages
-3. **Permission denied**: Check file permissions or run as administrator (Windows)
-4. **Proxy issues**: Verify PROXY_URL format in .env file
-5. **Rate limiting**: Adjust RATE_LIMIT_DELAY for slower requests
+**1. "Module not found" Error**:
+```bash
+# Ensure dependencies are installed
+uv sync
 
-### Logging
+# Verify Python path
+uv run python -c "import sys; print(sys.path)"
+```
 
-Check `logs/` directory for detailed error messages. Adjust `LOG_LEVEL` in `.env` to `DEBUG` for more verbose output.
+**2. Permission Denied (Data Directory)**:
+```bash
+# Check directory permissions
+ls -la data/
 
-## Next Steps
+# Create directory manually if needed
+mkdir -p data logs
+chmod 755 data logs
+```
 
-1. Review `CLAUDE.md` for development guidelines
-2. Explore `src/etsy_scraper/config/etsy_flow_config.py` to customize scraping parameters
-3. Run tests to ensure setup is correct
-4. Start developing new scrapers in `src/etsy_scraper/scrapers/`
+**3. SSL Certificate Errors**:
+```bash
+# Update certificates (macOS)
+/Applications/Python\ 3.11/Install\ Certificates.command
+
+# Or disable SSL verification (not recommended for production)
+# Edit src/etsy_scraper/config/etsy_flow_config.py
+# Set CURL_CFFI_CONFIG["verify"] = False
+```
+
+**4. DataDome Protection Detected**:
+This is normal behavior. The scraper:
+- Detects protection attempts
+- Logs them for analysis
+- Continues extracting available data
+- Uses human-like timing to minimize detection
+
+### Performance Optimization
+
+**1. Adjust Rate Limiting**:
+Edit `src/etsy_scraper/config/etsy_flow_config.py`:
+```python
+TIMING = {
+    "page_navigation": (2.0, 5.0),  # Increase delays
+    "request_delay": (1.5, 3.5)    # More conservative timing
+}
+```
+
+**2. Memory Usage**:
+For very large scraping tasks:
+- Use `--max-pages` to chunk the work
+- Clear data periodically with `--clear-data`
+- Monitor system memory usage
+
+**3. Network Issues**:
+```bash
+# Use proxy for network routing
+uv run python src/etsy_scraper/scrapers/scraper_main.py --proxy http://proxy:port
+
+# Increase timeout in config if needed
+```
+
+## Development Setup
+
+### Running Tests
+
+```bash
+# Install development dependencies
+uv sync --dev
+
+# Run all tests
+uv run pytest
+
+# Run with coverage
+uv run pytest --cov=src --cov-report=term-missing
+
+# Quick test run
+uv run pytest -q
+```
+
+### Code Quality Tools
+
+```bash
+# Format code
+uv run ruff format src/ tests/
+
+# Lint code
+uv run ruff check --fix src/ tests/
+
+# Type checking
+uv run mypy src/
+```
+
+### Adding Dependencies
+
+```bash
+# Add new runtime dependency
+uv add package_name
+
+# Add development dependency
+uv add --dev package_name
+
+# Update lock file
+uv lock
+```
+
+## Support and Maintenance
+
+### Regular Maintenance
+
+1. **Update Dependencies**:
+   ```bash
+   uv sync --upgrade
+   ```
+
+2. **Clean Old Data**:
+   ```bash
+   # Remove old CSV files
+   find data/ -name "*.csv" -mtime +30 -delete
+   
+   # Clean old logs
+   find logs/ -name "*.log" -mtime +7 -delete
+   ```
+
+3. **Monitor Performance**:
+   - Check log files for errors
+   - Monitor CSV file growth
+   - Verify data quality periodically
+
+### Getting Help
+
+1. **Check Logs**: Always start with `logs/etsy_scraper.log`
+2. **Use Verbose Mode**: Add `--verbose` flag for detailed output
+3. **Test Configuration**: Use `--dry-run` to verify settings
+4. **Check Documentation**: Review module documentation in `specs/`
+
+This setup guide should get you started with the Etsy Template Scraper. The modular architecture ensures reliable operation while the comprehensive CLI interface provides flexibility for various scraping needs.

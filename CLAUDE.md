@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an Etsy web scraping project designed to extract data from Etsy listings and shops. The scraper implements a multi-page flow replication strategy using curl-cffi to bypass anti-bot protections like DataDome.
+This is an Etsy web scraping project designed to extract comprehensive product data from Etsy's template category pages. The scraper implements a dynamic pagination strategy using curl-cffi to bypass anti-bot protections like DataDome and collects detailed product information with 19 fields per item including pricing, ratings, advertisements detection, and seller information.
 
 ## Development Commands
 
@@ -62,26 +62,52 @@ uv run black src/ tests/
 
 ### Running the Scraper
 ```bash
-# Run the main Etsy flow scraper
-uv run python src/etsy_scraper/scrapers/etsy_flow_curl_cffi.py
+# Run the main Etsy template scraper (CLI interface)
+uv run python src/etsy_scraper/scrapers/scraper_main.py
+
+# Scrape first 5 pages
+uv run python src/etsy_scraper/scrapers/scraper_main.py --max-pages 5
+
+# Resume from specific page
+uv run python src/etsy_scraper/scrapers/scraper_main.py --start-page 10
+
+# Clear data and start fresh
+uv run python src/etsy_scraper/scrapers/scraper_main.py --clear-data --max-pages 10
+
+# Run with verbose logging
+uv run python src/etsy_scraper/scrapers/scraper_main.py --verbose --max-pages 3
+
+# Test configuration (dry run)
+uv run python src/etsy_scraper/scrapers/scraper_main.py --dry-run
 ```
 
 ## Architecture
 
-### Core Flow Implementation
-The scraper implements a 3-page browsing flow that mimics human behavior:
-1. **Templates Page**: Browse personal finance templates category
-2. **Listing Page**: View specific product listing (ADHD budget planner)
-3. **Shop Page**: Visit seller's shop
+### Core Architecture Implementation
+The scraper implements a dynamic pagination system that automatically navigates through all Etsy template category pages:
+1. **Dynamic Page Discovery**: Automatically detects available pages and navigation structure
+2. **Product Extraction**: Extracts 19 comprehensive fields per product including advertisements detection
+3. **CSV Storage**: Saves data with deduplication and resume capability
+4. **Session Management**: Maintains session continuity with rotation and retry logic
 
-This flow is designed to appear natural to anti-bot systems by maintaining proper referrer chains, session continuity, and human-like timing delays.
+This architecture is designed to appear natural to anti-bot systems by maintaining proper referrer chains, session continuity, and human-like timing delays between page navigations.
 
 ### Key Components
 
-- **`scrapers/etsy_flow_curl_cffi.py`**: Main scraper implementation using curl-cffi library for browser impersonation. Handles the complete 3-page flow with DataDome bypass strategies.
+- **`scrapers/scraper_main.py`**: CLI interface and main execution script with comprehensive command-line options for flexible scraping control.
 
-- **`config/etsy_flow_config.py`**: Central configuration extracted from HAR file analysis. Contains:
-  - URLs for each page in the flow
+- **`scrapers/etsy_template_scraper.py`**: Core scraper implementation using curl-cffi library for browser impersonation. Handles dynamic pagination with DataDome bypass strategies.
+
+- **`scrapers/pagination.py`**: Handles dynamic page detection and navigation through category pages.
+
+- **`extractors/product_links.py`**: Enhanced product data extraction with 19-field comprehensive data collection including advertisement detection.
+
+- **`data/csv_manager.py`**: CSV storage system with deduplication, progress tracking, and resume capability.
+
+- **`scrapers/session_manager.py`**: Session rotation and retry logic for robust request handling.
+
+- **`config/etsy_flow_config.py`**: Central configuration containing:
+  - Base URLs and pagination parameters
   - Browser headers and session parameters
   - Timing configurations for human-like delays
   - Validation criteria for success/failure detection
@@ -96,14 +122,26 @@ The project uses curl-cffi with Chrome impersonation to bypass DataDome and othe
 - Browser fingerprint spoofing via `impersonate="chrome124"`
 - Proper header management including sec-ch-* headers
 - Session persistence with tracking cookies
-- Human-like timing delays between page navigations (40-55s for page 1→2, 5-12s for page 2→3)
-- Referrer chain maintenance
+- Rate limiting with human-like timing delays between requests (1-3 seconds)
+- Session rotation and retry mechanisms
+- DataDome detection and logging
+- Referrer chain maintenance throughout pagination
 
 ### Data Extraction
-Each page extracts specific data:
-- Templates page: Number of listings found
-- Listing page: Product title, price, seller name
-- Shop page: Shop name, total items count
+The scraper extracts comprehensive product data with **19 fields per product**:
+
+**Basic Information**: listing_id, url, title, shop_name, shop_url
+**Pricing**: sale_price, original_price, discount_percentage, is_on_sale
+**Product Attributes**: is_advertisement, is_digital_download, is_bestseller, is_star_seller, free_shipping
+**Reviews & Ratings**: rating, review_count
+**Metadata**: page_number, extraction_date, position_on_page
+
+**Key Features**:
+- Advertisement detection for sponsored/promoted listings
+- Comprehensive pricing analysis including discount calculations
+- Star seller and bestseller status tracking
+- Digital vs physical product classification
+- Review and rating data collection
 
 ## Testing Approach
 

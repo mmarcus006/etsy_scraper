@@ -1,7 +1,7 @@
 # Project Structure
 
 ```
-etsy_scraper/
+etsy_scraper/ (Updated Architecture)
 ├── .claude/                    # Claude Code configuration
 │   ├── agents/                 # Custom agent definitions
 │   ├── commands/               # Custom command definitions
@@ -24,11 +24,20 @@ etsy_scraper/
 │       │   ├── __init__.py
 │       │   ├── etsy_flow_config.py  # Etsy-specific settings
 │       │   └── settings.py          # General settings
+│       ├── data/               # Data management modules
+│       │   ├── __init__.py
+│       │   └── csv_manager.py       # CSV storage with deduplication
+│       ├── extractors/         # Data extraction modules
+│       │   ├── __init__.py
+│       │   └── product_links.py     # Product data extractor (19 fields)
 │       ├── models/             # Data models (currently empty)
 │       │   └── __init__.py
 │       ├── scrapers/           # Scraping implementations
 │       │   ├── __init__.py
-│       │   └── etsy_flow_curl_cffi.py  # Main scraper
+│       │   ├── scraper_main.py      # CLI interface and main execution
+│       │   ├── etsy_template_scraper.py  # Core pagination scraper
+│       │   ├── pagination.py        # Page navigation handler
+│       │   └── session_manager.py   # Session rotation and retry logic
 │       └── utils/              # Utility modules
 │           ├── __init__.py
 │           └── logger.py       # Logging configuration
@@ -50,8 +59,30 @@ etsy_scraper/
 ## Key Directories
 
 - **src/etsy_scraper/**: Main application code following Python package structure
-- **data/**: Runtime data storage and caching
-- **logs/**: Application logging output
+  - **scrapers/**: Core scraping logic with CLI interface and pagination
+  - **extractors/**: Product data extraction with 19-field comprehensive extraction
+  - **data/**: CSV management with deduplication and resume functionality
+  - **config/**: Configuration settings and Etsy-specific parameters
+  - **utils/**: Logging and utility functions
+- **data/**: Runtime data storage including CSV output files and caching
+- **logs/**: Application logging output with detailed scraping progress
 - **tests/**: Test suite with unit and integration tests
 - **specs/**: Project documentation and specifications
 - **.claude/**: Claude Code configuration and custom extensions
+
+## Module Architecture Changes
+
+The project has evolved from a fixed 3-page flow to a dynamic pagination system:
+
+### Old Architecture (Fixed Flow)
+- Single scraper: `etsy_flow_curl_cffi.py`
+- Fixed 3-page navigation sequence
+- Basic data extraction
+
+### New Architecture (Dynamic Pagination)
+- **CLI Interface**: `scraper_main.py` with comprehensive command-line options
+- **Core Scraper**: `etsy_template_scraper.py` with pagination support
+- **Pagination Handler**: `pagination.py` for dynamic page navigation
+- **Enhanced Extraction**: `product_links.py` with 19-field data collection
+- **Data Management**: `csv_manager.py` with deduplication and resume capability
+- **Session Management**: `session_manager.py` for robust request handling

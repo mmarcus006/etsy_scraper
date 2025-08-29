@@ -22,7 +22,7 @@ from utils.logger import setup_logger
 from extractors.product_links import ProductLinkExtractor
 from scrapers.pagination import PaginationHandler
 from scrapers.session_manager import SessionManager, RateLimiter
-from data.csv_manager import ProductCSVManager
+from data_management.csv_manager import ProductCSVManager
 
 logger = setup_logger(__name__)
 
